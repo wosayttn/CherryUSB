@@ -510,14 +510,15 @@ rt_err_t rt_rndis_eth_tx(rt_device_t dev, struct pbuf *p)
         msg->MessageLength += 1;
     }
 
-    if (device->frame_debug == RT_TRUE) {
-        rt_kprintf("msg @ %08x\n", msg);
+    if (device->frame_debug == RT_TRUE)
+    {
         hex_data_print("rndis eth tx", (rt_uint8_t *)msg, msg->MessageLength);
     }
     result = rt_rndis_msg_data_send(device->rndis_class, (rt_uint8_t *)msg, msg->MessageLength);
+
     device->send_packet_counter++;
 
-    return result;
+    return (result == msg->MessageLength) ? RT_EOK : -RT_ERROR;
 }
 
 #ifdef RT_USING_DEVICE_OPS
