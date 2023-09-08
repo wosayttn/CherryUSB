@@ -172,31 +172,6 @@ static const uint8_t hid_keyboard_report_desc[HID_KEYBOARD_REPORT_DESC_SIZE] = {
     0xc0        // END_COLLECTION
 };
 
-void usbd_event_handler(uint8_t event)
-{
-    switch (event) {
-        case USBD_EVENT_RESET:
-            break;
-        case USBD_EVENT_CONNECTED:
-            break;
-        case USBD_EVENT_DISCONNECTED:
-            break;
-        case USBD_EVENT_RESUME:
-            break;
-        case USBD_EVENT_SUSPEND:
-            break;
-        case USBD_EVENT_CONFIGURED:
-            break;
-        case USBD_EVENT_SET_REMOTE_WAKEUP:
-            break;
-        case USBD_EVENT_CLR_REMOTE_WAKEUP:
-            break;
-
-        default:
-            break;
-    }
-}
-
 #define HID_STATE_IDLE 0
 #define HID_STATE_BUSY 1
 
@@ -213,7 +188,7 @@ static struct usbd_endpoint hid_in_ep = {
     .ep_addr = HID_INT_EP
 };
 
-struct usbd_interface intf0;
+static struct usbd_interface intf0;
 
 void hid_keyboard_init(void)
 {
@@ -221,10 +196,10 @@ void hid_keyboard_init(void)
     usbd_add_interface(usbd_hid_init_intf(&intf0, hid_keyboard_report_desc, HID_KEYBOARD_REPORT_DESC_SIZE));
     usbd_add_endpoint(&hid_in_ep);
 
-    usbd_initialize();
+    usbd_initialize(NULL);
 }
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[64];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[64];
 
 void hid_keyboard_test(void)
 {

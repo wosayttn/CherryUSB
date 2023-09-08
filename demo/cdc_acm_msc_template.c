@@ -110,10 +110,10 @@ static const uint8_t cdc_msc_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
 
-volatile bool ep_tx_busy_flag = false;
+static volatile bool ep_tx_busy_flag = false;
 
 #ifdef CONFIG_USB_HS
 #define CDC_MAX_MPS 512
@@ -121,7 +121,7 @@ volatile bool ep_tx_busy_flag = false;
 #define CDC_MAX_MPS 64
 #endif
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_cdc_acm_msc(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -178,9 +178,9 @@ struct usbd_endpoint cdc_in_ep = {
     .ep_cb = usbd_cdc_acm_bulk_in
 };
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
-struct usbd_interface intf2;
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
+static struct usbd_interface intf2;
 
 void cdc_acm_msc_init(void)
 {
@@ -191,7 +191,7 @@ void cdc_acm_msc_init(void)
     usbd_add_endpoint(&cdc_in_ep);
     usbd_add_interface(usbd_msc_init_intf(&intf2, MSC_OUT_EP, MSC_IN_EP));
 
-    usbd_initialize();
+    usbd_initialize(usbd_event_handler_cdc_acm_msc);
 }
 
 volatile uint8_t dtr_enable = 0;

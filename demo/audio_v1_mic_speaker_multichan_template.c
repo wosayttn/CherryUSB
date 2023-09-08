@@ -140,37 +140,14 @@ const uint8_t audio_v1_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[AUDIO_OUT_PACKET];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[AUDIO_IN_PACKET];
-
-volatile bool tx_flag = 0;
-volatile bool rx_flag = 0;
-volatile bool ep_tx_busy_flag = false;
-
-void usbd_event_handler(uint8_t event)
-{
-    switch (event) {
-        case USBD_EVENT_RESET:
-            break;
-        case USBD_EVENT_CONNECTED:
-            break;
-        case USBD_EVENT_DISCONNECTED:
-            break;
-        case USBD_EVENT_RESUME:
-            break;
-        case USBD_EVENT_SUSPEND:
-            break;
-        case USBD_EVENT_CONFIGURED:
-            break;
-        case USBD_EVENT_SET_REMOTE_WAKEUP:
-            break;
-        case USBD_EVENT_CLR_REMOTE_WAKEUP:
-            break;
-
-        default:
-            break;
-    }
-}
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[AUDIO_OUT_PACKET];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[AUDIO_IN_PACKET];
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
+static struct usbd_interface intf2;
+static volatile bool tx_flag = 0;
+static volatile bool rx_flag = 0;
+static volatile bool ep_tx_busy_flag = false;
 
 void usbd_audio_open(uint8_t intf)
 {
@@ -218,10 +195,6 @@ static struct usbd_endpoint audio_out_ep = {
     .ep_addr = AUDIO_OUT_EP
 };
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
-struct usbd_interface intf2;
-
 struct audio_entity_info audio_entity_table[] = {
     { .bEntityId = AUDIO_IN_FU_ID,
       .bDescriptorSubtype = AUDIO_CONTROL_FEATURE_UNIT,
@@ -240,7 +213,7 @@ void audio_v1_init(void)
     usbd_add_endpoint(&audio_in_ep);
     usbd_add_endpoint(&audio_out_ep);
 
-    usbd_initialize();
+    usbd_initialize(NULL);
 }
 
 void audio_v1_test(void)

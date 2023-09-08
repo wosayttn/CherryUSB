@@ -157,32 +157,9 @@ static const uint8_t mic_default_sampling_freq_table[] = {
     AUDIO_SAMPLE_FREQ_4B(0x00)
 };
 
-volatile bool tx_flag = 0;
-
-void usbd_event_handler(uint8_t event)
-{
-    switch (event) {
-        case USBD_EVENT_RESET:
-            break;
-        case USBD_EVENT_CONNECTED:
-            break;
-        case USBD_EVENT_DISCONNECTED:
-            break;
-        case USBD_EVENT_RESUME:
-            break;
-        case USBD_EVENT_SUSPEND:
-            break;
-        case USBD_EVENT_CONFIGURED:
-            break;
-        case USBD_EVENT_SET_REMOTE_WAKEUP:
-            break;
-        case USBD_EVENT_CLR_REMOTE_WAKEUP:
-            break;
-
-        default:
-            break;
-    }
-}
+static volatile bool tx_flag = 0;
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
 
 void usbd_audio_open(uint8_t intf)
 {
@@ -212,9 +189,6 @@ static struct usbd_endpoint audio_in_ep = {
     .ep_addr = AUDIO_IN_EP
 };
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
-
 struct audio_entity_info audio_entity_table[] = {
     { .bEntityId = AUDIO_IN_CLOCK_ID,
       .bDescriptorSubtype = AUDIO_CONTROL_CLOCK_SOURCE,
@@ -231,7 +205,7 @@ void audio_v2_init(void)
     usbd_add_interface(usbd_audio_init_intf(&intf1, 0x0200, audio_entity_table, 2));
     usbd_add_endpoint(&audio_in_ep);
 
-    usbd_initialize();
+    usbd_initialize(NULL);
 }
 
 void audio_v2_test(void)

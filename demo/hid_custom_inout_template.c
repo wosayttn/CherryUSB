@@ -160,8 +160,8 @@ static const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
     0xC0 /*     END_COLLECTION	             */
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[HIDRAW_OUT_EP_SIZE];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t send_buffer[HIDRAW_IN_EP_SIZE];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[HIDRAW_OUT_EP_SIZE];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t send_buffer[HIDRAW_IN_EP_SIZE];
 
 #define HID_STATE_IDLE 0
 #define HID_STATE_BUSY 1
@@ -169,7 +169,7 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t send_buffer[HIDRAW_IN_EP_SIZE];
 /*!< hid state ! Data can be sent only when state is idle  */
 static volatile uint8_t custom_state;
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_hid_custom(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -227,7 +227,7 @@ static struct usbd_endpoint custom_out_ep = {
  * @param[in]        none
  * @retval           none
  */
-struct usbd_interface intf0;
+static struct usbd_interface intf0;
 
 void hid_custom_init(void)
 {
@@ -236,5 +236,5 @@ void hid_custom_init(void)
     usbd_add_endpoint(&custom_in_ep);
     usbd_add_endpoint(&custom_out_ep);
 
-    usbd_initialize();
+    usbd_initialize(usbd_event_handler_hid_custom);
 }

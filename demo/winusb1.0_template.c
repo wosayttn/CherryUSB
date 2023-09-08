@@ -82,7 +82,7 @@ __ALIGN_BEGIN const uint8_t WINUSB_IF0_WCIDProperties [142] __ALIGN_END = {
   0x00, 0x01,                                       /* bcdVersion */
   0x05, 0x00,                                       /* wIndex */
   0x01, 0x00,                                       /* wCount */
-  
+
   ///////////////////////////////////////
   /// registry propter descriptor
   ///////////////////////////////////////
@@ -117,7 +117,7 @@ __ALIGN_BEGIN const uint8_t WINUSB_IF1_WCIDProperties [142] __ALIGN_END = {
   0x00, 0x01,                                       /* bcdVersion */
   0x05, 0x00,                                       /* wIndex */
   0x01, 0x00,                                       /* wCount */
-  
+
   ///////////////////////////////////////
   /// registry propter descriptor
   ///////////////////////////////////////
@@ -329,12 +329,12 @@ const uint8_t winusb_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048];
 
-volatile bool ep_tx_busy_flag = false;
+static volatile bool ep_tx_busy_flag = false;
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_winusb(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -398,7 +398,7 @@ struct usbd_endpoint winusb_in_ep1 = {
     .ep_cb = usbd_winusb_in
 };
 
-struct usbd_interface intf0;
+static struct usbd_interface intf0;
 
 #if DOUBLE_WINUSB == 1
 
@@ -452,5 +452,5 @@ void winusb_init(void)
     usbd_add_endpoint(&winusb_out_ep2);
     usbd_add_endpoint(&winusb_in_ep2);
 #endif
-    usbd_initialize();
+    usbd_initialize(usbd_event_handler_winusb);
 }

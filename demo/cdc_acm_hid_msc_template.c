@@ -227,10 +227,10 @@ static struct usbd_endpoint hid_in_ep = {
     .ep_addr = HID_INT_EP
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
 
-volatile bool ep_tx_busy_flag = false;
+static volatile bool ep_tx_busy_flag = false;
 
 #ifdef CONFIG_USB_HS
 #define CDC_MAX_MPS 512
@@ -238,7 +238,7 @@ volatile bool ep_tx_busy_flag = false;
 #define CDC_MAX_MPS 64
 #endif
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_cdc_acm_hid_msc(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -295,10 +295,10 @@ struct usbd_endpoint cdc_in_ep = {
     .ep_cb = usbd_cdc_acm_bulk_in
 };
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
-struct usbd_interface intf2;
-struct usbd_interface intf3;
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
+static struct usbd_interface intf2;
+static struct usbd_interface intf3;
 
 void cdc_acm_hid_msc_descriptor_init(void)
 {
@@ -320,7 +320,7 @@ void cdc_acm_hid_msc_descriptor_init(void)
     mouse_cfg.x = 0;
     mouse_cfg.y = 0;
 
-    usbd_initialize();
+    usbd_initialize(usbd_event_handler_cdc_acm_hid_msc);
 }
 
 /**
@@ -377,19 +377,19 @@ BLOCK_TYPE mass_block[BLOCK_COUNT];
 
 void usbd_msc_get_cap(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
 {
-    *block_num = 1000; //Pretend having so many buffer,not has actually.
+    *block_num = (BLOCK_COUNT<1000) ? 1000 : BLOCK_COUNT; //Pretend having so many buffer,not has actually.
     *block_size = BLOCK_SIZE;
 }
 int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t length)
 {
-    if (sector < 10)
+    if (sector < BLOCK_COUNT)
         memcpy(buffer, mass_block[sector].BlockSpace, length);
     return 0;
 }
 
 int usbd_msc_sector_write(uint32_t sector, uint8_t *buffer, uint32_t length)
 {
-    if (sector < 10)
+    if (sector < BLOCK_COUNT)
         memcpy(mass_block[sector].BlockSpace, buffer, length);
     return 0;
 }

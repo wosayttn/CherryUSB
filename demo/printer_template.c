@@ -98,10 +98,10 @@ static const uint8_t printer_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[PRINTER_OUT_EP_SIZE];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[PRINTER_IN_EP_SIZE];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[PRINTER_OUT_EP_SIZE];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[PRINTER_IN_EP_SIZE];
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_printer(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -161,7 +161,7 @@ struct usbd_endpoint printer_in_ep = {
     .ep_cb = usbd_printer_bulk_in
 };
 
-struct usbd_interface intf0;
+static struct usbd_interface intf0;
 
 static const uint8_t printer_device_id[] =
 {
@@ -180,5 +180,5 @@ void printer_init(void)
   usbd_add_endpoint(&printer_out_ep);
   usbd_add_endpoint(&printer_in_ep);
 
-  usbd_initialize();
+  usbd_initialize(usbd_event_handler_printer);
 }

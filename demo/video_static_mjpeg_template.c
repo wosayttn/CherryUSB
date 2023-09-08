@@ -141,31 +141,6 @@ const uint8_t video_descriptor[] = {
     0x00
 };
 
-void usbd_event_handler(uint8_t event)
-{
-    switch (event) {
-        case USBD_EVENT_RESET:
-            break;
-        case USBD_EVENT_CONNECTED:
-            break;
-        case USBD_EVENT_DISCONNECTED:
-            break;
-        case USBD_EVENT_RESUME:
-            break;
-        case USBD_EVENT_SUSPEND:
-            break;
-        case USBD_EVENT_CONFIGURED:
-            break;
-        case USBD_EVENT_SET_REMOTE_WAKEUP:
-            break;
-        case USBD_EVENT_CLR_REMOTE_WAKEUP:
-            break;
-
-        default:
-            break;
-    }
-}
-
 volatile bool tx_flag = 0;
 volatile bool iso_tx_busy = false;
 
@@ -193,8 +168,8 @@ static struct usbd_endpoint video_in_ep = {
     .ep_addr = VIDEO_IN_EP
 };
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
 
 void video_init()
 {
@@ -203,7 +178,7 @@ void video_init()
     usbd_add_interface(usbd_video_init_intf(&intf1, INTERVAL, MAX_FRAME_SIZE, MAX_PAYLOAD_SIZE));
     usbd_add_endpoint(&video_in_ep);
 
-    usbd_initialize();
+    usbd_initialize(NULL);
 }
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t packet_buffer[10 * 1024];

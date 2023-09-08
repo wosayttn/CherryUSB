@@ -114,10 +114,10 @@ static const uint8_t cdc_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[4][2048];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[4][2048] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[4][2048];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[4][2048] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
 
-volatile bool ep_tx_busy_flag = false;
+static volatile bool ep_tx_busy_flag = false;
 
 #ifdef CONFIG_USB_HS
 #define CDC_MAX_MPS 512
@@ -125,7 +125,7 @@ volatile bool ep_tx_busy_flag = false;
 #define CDC_MAX_MPS 64
 #endif
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_cdc_acm_multi(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -214,14 +214,14 @@ struct usbd_endpoint cdc_in_ep4 = {
     .ep_cb = usbd_cdc_acm_bulk_in
 };
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
-struct usbd_interface intf2;
-struct usbd_interface intf3;
-struct usbd_interface intf4;
-struct usbd_interface intf5;
-struct usbd_interface intf6;
-struct usbd_interface intf7;
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
+static struct usbd_interface intf2;
+static struct usbd_interface intf3;
+static struct usbd_interface intf4;
+static struct usbd_interface intf5;
+static struct usbd_interface intf6;
+static struct usbd_interface intf7;
 
 void cdc_acm_multi_init(void)
 {
@@ -247,5 +247,5 @@ void cdc_acm_multi_init(void)
     usbd_add_endpoint(&cdc_out_ep4);
     usbd_add_endpoint(&cdc_in_ep4);
 
-    usbd_initialize();
+    usbd_initialize(usbd_event_handler_cdc_acm_multi);
 }

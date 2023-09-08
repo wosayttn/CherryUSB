@@ -151,32 +151,7 @@ const uint8_t bos_descriptor[] = {
     0x0a, 0x10, 0x03, 0x00, 0x0f, 0x00, 0x01, 0x01, 0xf4, 0x01
 };
 
-void usbd_event_handler(uint8_t event)
-{
-    switch (event) {
-        case USBD_EVENT_RESET:
-            break;
-        case USBD_EVENT_CONNECTED:
-            break;
-        case USBD_EVENT_DISCONNECTED:
-            break;
-        case USBD_EVENT_RESUME:
-            break;
-        case USBD_EVENT_SUSPEND:
-            break;
-        case USBD_EVENT_CONFIGURED:
-            break;
-        case USBD_EVENT_SET_REMOTE_WAKEUP:
-            break;
-        case USBD_EVENT_CLR_REMOTE_WAKEUP:
-            break;
-
-        default:
-            break;
-    }
-}
-
-struct usbd_interface intf0;
+static struct usbd_interface intf0;
 
 struct usb_bos_descriptor bos_desc = {
     .string = bos_descriptor,
@@ -189,5 +164,5 @@ void mtp_init(void)
     usbd_msosv1_desc_register(&msosv1_desc);
     usbd_bos_desc_register(&bos_desc);
     usbd_add_interface(usbd_mtp_init_intf(&intf0, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP));
-    usbd_initialize();
+    usbd_initialize(NULL);
 }

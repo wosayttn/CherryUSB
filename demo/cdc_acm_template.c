@@ -99,10 +99,10 @@ static const uint8_t cdc_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048];
 
-volatile bool ep_tx_busy_flag = false;
+static volatile bool ep_tx_busy_flag = false;
 
 #ifdef CONFIG_USB_HS
 #define CDC_MAX_MPS 512
@@ -110,7 +110,7 @@ volatile bool ep_tx_busy_flag = false;
 #define CDC_MAX_MPS 64
 #endif
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_cdc_acm(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -186,7 +186,7 @@ void cdc_acm_init(void)
     usbd_add_interface(usbd_cdc_acm_init_intf(&intf1));
     usbd_add_endpoint(&cdc_out_ep);
     usbd_add_endpoint(&cdc_in_ep);
-    usbd_initialize();
+    usbd_initialize(usbd_event_handler_cdc_acm);
 }
 
 volatile uint8_t dtr_enable = 0;

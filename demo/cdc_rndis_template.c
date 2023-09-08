@@ -122,7 +122,6 @@ const uint8_t mac[6] = { 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff };
 
 #ifdef RT_USING_LWIP
 #include <rtthread.h>
-#include <rtdevice.h>
 #include <netif/ethernetif.h>
 
 const ip_addr_t ipaddr = IPADDR4_INIT_BYTES(IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
@@ -263,7 +262,7 @@ void rndis_input_poll(void)
 }
 #endif /* RT_USING_LWIP */
 
-void usbd_event_handler(uint8_t event)
+static void usbd_event_handler_cdc_rndis(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
@@ -291,8 +290,8 @@ void usbd_event_handler(uint8_t event)
     }
 }
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
 
 void cdc_rndis_init(void)
 {
@@ -304,5 +303,5 @@ void cdc_rndis_init(void)
     usbd_desc_register(cdc_descriptor);
     usbd_add_interface(usbd_rndis_init_intf(&intf0, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP, mac));
     usbd_add_interface(usbd_rndis_init_intf(&intf1, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP, mac));
-    usbd_initialize();
+    usbd_initialize(usbd_event_handler_cdc_rndis);
 }

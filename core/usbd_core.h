@@ -45,6 +45,7 @@ enum usbd_event_type {
 typedef int (*usbd_request_handler)(struct usb_setup_packet *setup, uint8_t **data, uint32_t *len);
 typedef void (*usbd_endpoint_callback)(uint8_t ep, uint32_t nbytes);
 typedef void (*usbd_notify_handler)(uint8_t event, void *arg);
+typedef void (*usbd_event_handler)(uint8_t event);
 
 struct usbd_endpoint {
     uint8_t ep_addr;
@@ -88,10 +89,9 @@ void usbd_add_interface(struct usbd_interface *intf);
 void usbd_add_endpoint(struct usbd_endpoint *ep);
 
 bool usb_device_is_configured(void);
-int usbd_initialize(void);
+int usbd_initialize(usbd_event_handler);
 int usbd_deinitialize(void);
 
-void usbd_event_handler(uint8_t event);
 
 #ifdef __cplusplus
 }

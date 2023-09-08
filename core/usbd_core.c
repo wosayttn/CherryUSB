@@ -66,6 +66,8 @@ USB_NOCACHE_RAM_SECTION struct usbd_core_priv {
 } g_usbd_core;
 
 static void usbd_class_event_notify_handler(uint8_t event, void *arg);
+static void usbd_event_handler_default(uint8_t event);
+static usbd_event_handler usbd_event_handler_hook = usbd_event_handler_default;
 
 static void usbd_print_setup(struct usb_setup_packet *setup)
 {
@@ -504,9 +506,9 @@ static bool usbd_std_device_req_handler(struct usb_setup_packet *setup, uint8_t 
         case USB_REQUEST_SET_FEATURE:
             if (value == USB_FEATURE_REMOTE_WAKEUP) {
                 if (setup->bRequest == USB_REQUEST_SET_FEATURE) {
-                    usbd_event_handler(USBD_EVENT_SET_REMOTE_WAKEUP);
+                    usbd_event_handler_hook(USBD_EVENT_SET_REMOTE_WAKEUP);
                 } else {
-                    usbd_event_handler(USBD_EVENT_CLR_REMOTE_WAKEUP);
+                    usbd_event_handler_hook(USBD_EVENT_CLR_REMOTE_WAKEUP);
                 }
             } else if (value == USB_FEATURE_TEST_MODE) {
 #ifdef CONFIG_USBDEV_TEST_MODE
@@ -543,7 +545,7 @@ static bool usbd_std_device_req_handler(struct usb_setup_packet *setup, uint8_t 
             } else {
                 g_usbd_core.configuration = value;
                 usbd_class_event_notify_handler(USBD_EVENT_CONFIGURED, NULL);
-                usbd_event_handler(USBD_EVENT_CONFIGURED);
+                usbd_event_handler_hook(USBD_EVENT_CONFIGURED);
             }
             *len = 0;
             break;
@@ -964,22 +966,22 @@ static void usbd_class_event_notify_handler(uint8_t event, void *arg)
 
 void usbd_event_connect_handler(void)
 {
-    usbd_event_handler(USBD_EVENT_CONNECTED);
+    usbd_event_handler_hook(USBD_EVENT_CONNECTED);
 }
 
 void usbd_event_disconnect_handler(void)
 {
-    usbd_event_handler(USBD_EVENT_DISCONNECTED);
+    usbd_event_handler_hook(USBD_EVENT_DISCONNECTED);
 }
 
 void usbd_event_resume_handler(void)
 {
-    usbd_event_handler(USBD_EVENT_RESUME);
+    usbd_event_handler_hook(USBD_EVENT_RESUME);
 }
 
 void usbd_event_suspend_handler(void)
 {
-    usbd_event_handler(USBD_EVENT_SUSPEND);
+    usbd_event_handler_hook(USBD_EVENT_SUSPEND);
 }
 
 void usbd_event_reset_handler(void)
@@ -1001,7 +1003,7 @@ void usbd_event_reset_handler(void)
     usbd_ep_open(&ep0_cfg);
 
     usbd_class_event_notify_handler(USBD_EVENT_RESET, NULL);
-    usbd_event_handler(USBD_EVENT_RESET);
+    usbd_event_handler_hook(USBD_EVENT_RESET);
 }
 
 void usbd_event_ep0_setup_complete_handler(uint8_t *psetup)
@@ -1208,8 +1210,15 @@ bool usb_device_is_configured(void)
     return g_usbd_core.configuration;
 }
 
-int usbd_initialize(void)
+int usbd_initialize(usbd_event_handler pfnEvtHdl)
 {
+    if ( pfnEvtHdl ) {
+        usbd_event_handler_hook = pfnEvtHdl;
+    }
+    else {
+        usbd_event_handler_hook = usbd_event_handler_default;
+    }
+
     return usb_dc_init();
 }
 
@@ -1217,10 +1226,12 @@ int usbd_deinitialize(void)
 {
     g_usbd_core.intf_offset = 0;
     usb_dc_deinit();
+
+    usbd_event_handler_hook = usbd_event_handler_default;
     return 0;
 }
 
-__WEAK void usbd_event_handler(uint8_t event)
+void usbd_event_handler_default(uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:

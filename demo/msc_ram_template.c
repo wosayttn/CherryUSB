@@ -95,31 +95,6 @@ const uint8_t msc_ram_descriptor[] = {
     0x00
 };
 
-void usbd_event_handler(uint8_t event)
-{
-    switch (event) {
-        case USBD_EVENT_RESET:
-            break;
-        case USBD_EVENT_CONNECTED:
-            break;
-        case USBD_EVENT_DISCONNECTED:
-            break;
-        case USBD_EVENT_RESUME:
-            break;
-        case USBD_EVENT_SUSPEND:
-            break;
-        case USBD_EVENT_CONFIGURED:
-            break;
-        case USBD_EVENT_SET_REMOTE_WAKEUP:
-            break;
-        case USBD_EVENT_CLR_REMOTE_WAKEUP:
-            break;
-
-        default:
-            break;
-    }
-}
-
 #define BLOCK_SIZE  512
 #define BLOCK_COUNT 10
 
@@ -132,7 +107,8 @@ BLOCK_TYPE mass_block[BLOCK_COUNT];
 
 void usbd_msc_get_cap(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
 {
-    *block_num = 1000; //Pretend having so many buffer,not has actually.
+    /* Pretend having so many buffer, not has actually. */
+    *block_num = (BLOCK_COUNT < 1000) ? 1000 : BLOCK_COUNT;
     *block_size = BLOCK_SIZE;
 }
 int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t length)
@@ -149,12 +125,12 @@ int usbd_msc_sector_write(uint32_t sector, uint8_t *buffer, uint32_t length)
     return 0;
 }
 
-struct usbd_interface intf0;
+static struct usbd_interface intf0;
 
 void msc_ram_init(void)
 {
     usbd_desc_register(msc_ram_descriptor);
     usbd_add_interface(usbd_msc_init_intf(&intf0, MSC_OUT_EP, MSC_IN_EP));
 
-    usbd_initialize();
+    usbd_initialize(NULL);
 }

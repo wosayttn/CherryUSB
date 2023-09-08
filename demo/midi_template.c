@@ -146,31 +146,6 @@ const uint8_t midi_descriptor[] = {
     0x00
 };
 
-void usbd_event_handler(uint8_t event)
-{
-    switch (event) {
-        case USBD_EVENT_RESET:
-            break;
-        case USBD_EVENT_CONNECTED:
-            break;
-        case USBD_EVENT_DISCONNECTED:
-            break;
-        case USBD_EVENT_RESUME:
-            break;
-        case USBD_EVENT_SUSPEND:
-            break;
-        case USBD_EVENT_CONFIGURED:
-            break;
-        case USBD_EVENT_SET_REMOTE_WAKEUP:
-            break;
-        case USBD_EVENT_CLR_REMOTE_WAKEUP:
-            break;
-
-        default:
-            break;
-    }
-}
-
 void usbd_midi_bulk_out(uint8_t ep, uint32_t nbytes)
 {
 }
@@ -179,8 +154,8 @@ void usbd_midi_bulk_in(uint8_t ep, uint32_t nbytes)
 {
 }
 
-struct usbd_interface intf0;
-struct usbd_interface intf1;
+static struct usbd_interface intf0;
+static struct usbd_interface intf1;
 
 struct usbd_endpoint midi_out_ep = {
     .ep_addr = MIDI_OUT_EP,
@@ -200,5 +175,5 @@ void midi_init(void)
     usbd_add_endpoint(&midi_out_ep);
     usbd_add_endpoint(&midi_in_ep);
 
-    usbd_initialize();
+    usbd_initialize(NULL);
 }
