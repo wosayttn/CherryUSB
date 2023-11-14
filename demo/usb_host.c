@@ -171,7 +171,7 @@ int usb_msc_fatfs_test()
     if (res_sd == FR_OK) {
         res_sd = f_write(&fnew, read_write_buffer, sizeof(read_write_buffer), &fnum);
         if (res_sd == FR_OK) {
-            USB_LOG_RAW("write success, write lenï¼š%d\n", fnum);
+            USB_LOG_RAW("write success, write lenï¼?d\n", fnum);
         } else {
             USB_LOG_RAW("write fail\r\n");
             goto unmount;
@@ -187,7 +187,7 @@ int usb_msc_fatfs_test()
     if (res_sd == FR_OK) {
         res_sd = f_read(&fnew, read_write_buffer, sizeof(read_write_buffer), &fnum);
         if (res_sd == FR_OK) {
-            USB_LOG_RAW("read success, read lenï¼š%d\n", fnum);
+            USB_LOG_RAW("read success, read lenï¼?d\n", fnum);
         } else {
             USB_LOG_RAW("read fail\r\n");
             goto unmount;
@@ -398,10 +398,14 @@ void usbh_hid_stop(struct usbh_hid *hid_class)
 
 void usbh_msc_run(struct usbh_msc *msc_class)
 {
+    extern rt_err_t rt_udisk_run(struct usbh_msc *msc_class);
+    rt_udisk_run(msc_class);	
 }
 
 void usbh_msc_stop(struct usbh_msc *msc_class)
 {
+    extern rt_err_t rt_udisk_stop(struct usbh_msc *msc_class);
+    rt_udisk_stop(msc_class);
 }
 
 void usbh_audio_run(struct usbh_audio *audio_class)

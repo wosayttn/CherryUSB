@@ -77,7 +77,7 @@ int lsusb(int argc, char **argv);
 MSH_CMD_EXPORT(lsusb, start lsusb);
 
 int usbh_initialize(void);
-//INIT_APP_EXPORT(usbh_initialize);
+INIT_APP_EXPORT(usbh_initialize);
 MSH_CMD_EXPORT(usbh_initialize, start usbh_initialize);
 #endif
 

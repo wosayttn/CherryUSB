@@ -15,16 +15,25 @@
 #include "usbh_msc.h"
 
 #define MAX_PARTITION_COUNT 5
-#define CONFIG_DFS_MOUNT_POINT "/"
+#define CONFIG_DFS_MOUNT_POINT "/mnt/udisk/"
 
-struct ustor_data {
+#if defined(ARCH_ARM_ARM9)
+    #include "mmu.h"
+    #define CACHE_OP_CLEAN(addr, size)               mmu_clean_dcache(addr, size)
+    #define CACHE_OP_CLEAN_INVALIDATED(addr, size)   mmu_clean_invalidated_dcache(addr, size)
+    #define CACHE_OP_INVALIDATE(addr, size)          mmu_invalidate_dcache(addr, size)
+#endif
+
+struct ustor_data
+{
     struct dfs_partition part;
     struct usbh_msc *msc_class;
     int udisk_id;
     const char path;
 };
 
-struct ustor {
+struct ustor
+{
     rt_uint32_t capicity[2];
 
     struct rt_device dev[MAX_PARTITION_COUNT];
@@ -41,7 +50,8 @@ static int udisk_get_id(void)
 {
     int i;
 
-    for (i = 0; i < UDISK_MAX_COUNT; i++) {
+    for (i = 0; i < UDISK_MAX_COUNT; i++)
+    {
         if ((_udisk_idset & (1 << i)) != 0)
             continue;
         else
@@ -99,9 +109,12 @@ static rt_size_t rt_udisk_read(rt_device_t dev, rt_off_t pos, void *buffer,
     data = (struct ustor_data *)dev->user_data;
     msc_class = data->msc_class;
 
+    CACHE_OP_CLEAN_INVALIDATED((rt_uint32_t)buffer, size * SECTOR_SIZE);
+
     ret = usbh_msc_scsi_read10(msc_class, pos, (rt_uint8_t *)buffer, size);
 
-    if (ret != RT_EOK) {
+    if (ret != RT_EOK)
+    {
         rt_kprintf("usb mass_storage read failed\n");
         return 0;
     }
@@ -133,8 +146,11 @@ static rt_size_t rt_udisk_write(rt_device_t dev, rt_off_t pos, const void *buffe
     data = (struct ustor_data *)dev->user_data;
     msc_class = data->msc_class;
 
+    CACHE_OP_CLEAN((rt_uint32_t)buffer, size * SECTOR_SIZE);
+
     ret = usbh_msc_scsi_write10(msc_class, pos, (rt_uint8_t *)buffer, size);
-    if (ret != RT_EOK) {
+    if (ret != RT_EOK)
+    {
         rt_kprintf("usb mass_storage write %d sector failed\n", size);
         return 0;
     }
@@ -159,7 +175,8 @@ static rt_err_t rt_udisk_control(rt_device_t dev, int cmd, void *args)
 
     data = (struct ustor_data *)dev->user_data;
 
-    if (cmd == RT_DEVICE_CTRL_BLK_GETGEOME) {
+    if (cmd == RT_DEVICE_CTRL_BLK_GETGEOME)
+    {
         struct rt_device_blk_geometry *geometry;
 
         geometry = (struct rt_device_blk_geometry *)args;
@@ -175,7 +192,8 @@ static rt_err_t rt_udisk_control(rt_device_t dev, int cmd, void *args)
 }
 
 #ifdef RT_USING_DEVICE_OPS
-const static struct rt_device_ops udisk_device_ops = {
+const static struct rt_device_ops udisk_device_ops =
+{
     rt_udisk_init,
     RT_NULL,
     RT_NULL,
@@ -208,7 +226,8 @@ rt_err_t rt_udisk_run(struct usbh_msc *msc_class)
 
     /* get the first sector to read partition table */
     sector = (rt_uint8_t *)rt_malloc(SECTOR_SIZE);
-    if (sector == RT_NULL) {
+    if (sector == RT_NULL)
+    {
         rt_kprintf("allocate partition sector buffer failed\n");
         return -RT_ERROR;
     }
@@ -216,23 +235,27 @@ rt_err_t rt_udisk_run(struct usbh_msc *msc_class)
     rt_memset(sector, 0, SECTOR_SIZE);
 
     /* get the partition table */
+    CACHE_OP_CLEAN_INVALIDATED((rt_uint32_t)sector, SECTOR_SIZE);
     ret = usbh_msc_scsi_read10(msc_class, 0, sector, 1);
-    if (ret != RT_EOK) {
+    if (ret != RT_EOK)
+    {
         rt_kprintf("read parition table error\n");
 
         rt_free(sector);
         return -RT_ERROR;
     }
 
-    for (i = 0; i < MAX_PARTITION_COUNT; i++) {
+    for (i = 0; i < MAX_PARTITION_COUNT; i++)
+    {
         /* get the first partition */
         ret = dfs_filesystem_get_partition(&part[i], sector, i);
-        if (ret == RT_EOK) {
+        if (ret == RT_EOK)
+        {
             struct ustor_data *data = rt_malloc(sizeof(struct ustor_data));
             rt_memset(data, 0, sizeof(struct ustor_data));
             data->msc_class = msc_class;
             data->udisk_id = udisk_get_id();
-            rt_snprintf(dname, 6, "ud%d-%d", data->udisk_id, i);
+            rt_snprintf(dname, 8, "ud%d-%d", data->udisk_id, i);
             rt_snprintf(sname, 8, "sem_ud%d", i);
             data->part.lock = rt_sem_create(sname, 1, RT_IPC_FLAG_FIFO);
 
@@ -252,13 +275,19 @@ rt_err_t rt_udisk_run(struct usbh_msc *msc_class)
 
             stor_r->dev_cnt++;
 
-            if (dfs_mount(stor_r->dev[i].parent.name, CONFIG_DFS_MOUNT_POINT, "elm", 0, 0) == 0) {
+            if (dfs_mount(stor_r->dev[i].parent.name, CONFIG_DFS_MOUNT_POINT, "elm", 0, 0) == 0)
+            {
                 rt_kprintf("udisk part %d mount successfully\n", i);
-            } else {
+            }
+            else
+            {
                 rt_kprintf("udisk part %d mount failed\n", i);
             }
-        } else {
-            if (i == 0) {
+        }
+        else
+        {
+            if (i == 0)
+            {
                 struct ustor_data *data = rt_malloc(sizeof(struct ustor_data));
                 rt_memset(data, 0, sizeof(struct ustor_data));
                 data->udisk_id = udisk_get_id();
@@ -269,7 +298,7 @@ rt_err_t rt_udisk_run(struct usbh_msc *msc_class)
                 data->msc_class = msc_class;
                 data->part.lock = rt_sem_create("sem_ud", 1, RT_IPC_FLAG_FIFO);
 
-                rt_snprintf(dname, 7, "udisk%d", data->udisk_id);
+                rt_snprintf(dname, 8, "udisk%d", data->udisk_id);
 
                 /* register sdcard device */
                 stor_r->dev[0].type = RT_Device_Class_Block;
@@ -286,9 +315,12 @@ rt_err_t rt_udisk_run(struct usbh_msc *msc_class)
                 rt_device_register(&stor_r->dev[0], dname, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_REMOVABLE | RT_DEVICE_FLAG_STANDALONE);
 
                 stor_r->dev_cnt++;
-                if (dfs_mount(stor_r->dev[0].parent.name, CONFIG_DFS_MOUNT_POINT, "elm", 0, 0) == 0) {
+                if (dfs_mount(stor_r->dev[0].parent.name, CONFIG_DFS_MOUNT_POINT, "elm", 0, 0) == 0)
+                {
                     rt_kprintf("Mount FAT on Udisk successful.\n");
-                } else {
+                }
+                else
+                {
                     rt_kprintf("Mount FAT on Udisk failed.\n");
                 }
             }
@@ -321,7 +353,8 @@ rt_err_t rt_udisk_stop(struct usbh_msc *msc_class)
 
     RT_ASSERT(stor_r != RT_NULL);
 
-    for (i = 0; i < stor_r->dev_cnt; i++) {
+    for (i = 0; i < stor_r->dev_cnt; i++)
+    {
         rt_device_t dev = &stor_r->dev[i];
         data = (struct ustor_data *)dev->user_data;
 
