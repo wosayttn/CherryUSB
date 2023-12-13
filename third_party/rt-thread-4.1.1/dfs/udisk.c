@@ -22,6 +22,13 @@
     #define CACHE_OP_CLEAN(addr, size)               mmu_clean_dcache(addr, size)
     #define CACHE_OP_CLEAN_INVALIDATED(addr, size)   mmu_clean_invalidated_dcache(addr, size)
     #define CACHE_OP_INVALIDATE(addr, size)          mmu_invalidate_dcache(addr, size)
+#elif defined(ARCH_ARM_CORTEX_A)
+    extern void rt_hw_cpu_dcache_clean(void *addr, int size);
+    extern void rt_hw_cpu_dcache_clean_inv(void *addr, int size);
+    extern void rt_hw_cpu_dcache_invalidate(void *addr, int size);
+    #define CACHE_OP_CLEAN(addr, size)               rt_hw_cpu_dcache_clean(addr, size)
+    #define CACHE_OP_CLEAN_INVALIDATED(addr, size)   rt_hw_cpu_dcache_clean_inv(addr, size)
+    #define CACHE_OP_INVALIDATE(addr, size)          rt_hw_cpu_dcache_invalidate(addr, size)
 #endif
 
 struct ustor_data
